@@ -1,9 +1,9 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE OverloadedLists            #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE TemplateHaskell            #-}
 
 ----------------------------------------------------------------------
 -- |
@@ -30,25 +30,27 @@ module Web.Slack.Common
   where
 
 -- aeson
-import Data.Aeson
-import Data.Aeson.TH
+import           Data.Aeson
+import           Data.Aeson.TH
 
 -- base
-import GHC.Generics (Generic)
+import           Control.Exception
+import           Data.Typeable
+import           GHC.Generics       (Generic)
 
 -- http-api-data
-import Web.HttpApiData
-import Web.FormUrlEncoded
+import           Web.FormUrlEncoded
+import           Web.HttpApiData
 
 -- servant-client
-import Servant.Client
+import           Servant.Client
 
 -- slack-web
-import Web.Slack.Types
-import Web.Slack.Util
+import           Web.Slack.Types
+import           Web.Slack.Util
 
 -- text
-import Data.Text (Text)
+import           Data.Text          (Text)
 
 
 -- |
@@ -57,10 +59,10 @@ import Data.Text (Text)
 
 data HistoryReq =
   HistoryReq
-    { historyReqChannel :: Text
-    , historyReqCount :: Int
-    , historyReqLatest :: Maybe SlackTimestamp
-    , historyReqOldest :: Maybe SlackTimestamp
+    { historyReqChannel   :: Text
+    , historyReqCount     :: Int
+    , historyReqLatest    :: Maybe SlackTimestamp
+    , historyReqOldest    :: Maybe SlackTimestamp
     , historyReqInclusive :: Bool
     }
   deriving (Eq, Generic, Show)
@@ -109,7 +111,7 @@ data MessageType = MessageTypeMessage
 
 instance FromJSON MessageType where
   parseJSON "message" = pure MessageTypeMessage
-  parseJSON _ = fail "Invalid MessageType"
+  parseJSON _         = fail "Invalid MessageType"
 
 data Message =
   Message
@@ -118,7 +120,7 @@ data Message =
     , messageText :: SlackMessageText
     -- ^ the message text is in a markdown-like slack-specific format.
     -- Use 'Web.Slack.MessageParser.messageToHtml' to convert it to HTML.
-    , messageTs :: SlackTimestamp
+    , messageTs   :: SlackTimestamp
     }
   deriving (Eq, Generic, Show)
 
@@ -127,7 +129,7 @@ $(deriveFromJSON (jsonOpts "message") ''Message)
 data HistoryRsp =
   HistoryRsp
     { historyRspMessages :: [Message]
-    , historyRspHasMore :: Bool
+    , historyRspHasMore  :: Bool
     }
   deriving (Eq, Generic, Show)
 
@@ -140,4 +142,8 @@ data SlackClientError
     -- ^ errors from the network connection
     | SlackError Text
     -- ^ errors returned by the slack API
-  deriving (Eq, Generic, Show)
+  deriving (Eq, Generic, Show, Typeable)
+
+instance Exception SlackClientError
+
+
